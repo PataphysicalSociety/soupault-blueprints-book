@@ -1,0 +1,155 @@
+### Configuration file for the soupault website generator ###
+
+## Global settings
+
+[settings]
+  # This configuration only works with soupault 4.0.0 or later
+  soupault_version = "4.0.0"
+
+  strict = true
+  verbose = true
+  debug = true
+
+  # Force "clean URLs", i.e. book/foo.md becomes build/foo/index.html
+  # (Clean URLs is the default, you can set it to false if you don't like it)
+  clean_urls = true
+
+  # Where generated files go
+  build_dir = "build"
+
+  # Where page files are stored
+  site_dir = "book/"
+
+  # Where in the template the page content is inserted
+  default_content_selector = "main"
+
+  default_template_file = "templates/main.html"
+
+  # Page considered the section index
+  index_page = "index"
+
+  # Files that are considered pages and processed
+  # All other files are considered assets and copied unchanged
+  page_file_extensions = ["html", "md"]
+
+  doctype = "<!DOCTYPE html>"
+
+## Preprocessors convert non-HTML files to HTML
+## for further processing by soupault
+[preprocessors]
+  md = "pandoc -f commonmark+smart -t html"
+
+# Removes the chapter number from the output path
+# e.g. book/00_preface.md becomes build/preface/
+[hooks.pre-process]
+  lua_source = '''
+    target_file_name = Sys.basename(target_file)
+
+    target_page_dir = Sys.basename(target_dir)
+    target_page_parent_dir = Sys.dirname(target_dir)
+
+    target_page_dir = Regex.replace(target_page_dir, "^\\d+_", "")
+
+    target_dir = Sys.join_path(target_page_parent_dir, target_page_dir)
+    target_file = Sys.join_path(target_dir, target_file_name)
+
+    Log.debug(format("Target file name set to \"%s\"", target_file))
+'''
+
+## 
+[hooks.post-index]
+  lua_source = '''
+    Log.debug("Extracting chapter number")
+    page_file_name = Sys.basename(page_file)
+    res = Regex.find_all(page_file_name, "^(\\d+)")
+
+    if res then
+      chapter_number = res[1]
+    else
+      chapter_number = 0
+    end
+
+    index_fields["chapter_number"] = format("%s", chapter_number)
+
+    Log.debug(format("Extracted chapter number: %s", chapter_number))
+'''
+
+[index]
+  index = true
+
+  # Make the index data available even to content pages,
+  # at cost of making a reduced first pass to extract that data before the "real" build
+  # This is to generate the sidebar with the chapter list on every page
+  index_first = true
+
+  sort_by = "chapter_number"
+  sort_type = "numeric"
+  sort_descending = false
+
+[index.fields]
+  title = { selector = "h1" }
+
+## Widgets
+
+# Takes the content of the first <h1> and inserts it into the <title>
+[widgets.page-title]
+  widget = "title"
+  selector = "h1"
+  default = "Sample book"
+  append = " &mdash; Sample book"
+
+# Moves all elements with class="footnote" to <div id="footnotes"> 
+# and replaces them with numbered links.
+[widgets.footnotes]
+  widget = "footnotes"
+  selector = "div#footnotes"
+  footnote_selector = ["fn", ".footnote"]
+  footnote_link_class = "footnote"
+
+[widgets.table-of-contents]
+  exclude_page = "index.md"
+
+  widget = "toc"
+  selector = "div#toc"
+  action = "append_child"
+
+  min_level = 2
+
+  toc_list_class = "toc"
+  toc_class_levels = false
+
+  numbered_list = true
+
+  heading_links = true
+  heading_link_text = "→ "
+  heading_link_class = "here"
+
+  use_heading_slug = true
+
+[widgets.insert-chapters-index]
+  widget = "chapters-index"
+
+  index_selector = "div#chapters-index"
+
+  index_template = '''
+    <ul class="toc">
+      <li> <a href="/">About this book</a> </li>
+      {% for e in entries %}
+      <li> <a href="{{e.url}}">{{e.title}}</a> </li>
+      {% endfor %}
+    </ul>
+'''
+
+[widgets.cleanup-table-of-contents]
+  widget = "delete_element"
+  after  = "table-of-contents"
+
+  selector = "div#toc"
+  only_if_empty = true
+
+[widgets.clean-up-footnotes]
+  widget = "delete_element"
+  after = "footnotes"
+
+  selector = "div#footnotes"
+  only_if_empty = true
