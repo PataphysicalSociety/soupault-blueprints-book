@@ -1,6 +1,6 @@
-# Sample book
+# Introduction
 
-This is a sample book.
+This is a sample book made with [soupault-blueprints-book](https://github.com/PataphysicalSociety/soupault-blueprints-book).
 
 ## Adding chapters
 
