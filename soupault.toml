@@ -106,6 +106,15 @@
   footnote_selector = ["fn", ".footnote"]
   footnote_link_class = "footnote"
 
+# From plugins/footnotes-cleanup.lua
+# Removes the <div> meant for footnotes if there are no footnotes in the chapter
+[widgets.footnotes-container-cleanup]
+  widget = "footnotes-cleanup"
+  after = "footnotes"
+
+  footnote_link_selector = "a.footnote"
+  footnotes_container_selector = "div#footnotes"
+
 [widgets.table-of-contents]
   exclude_page = "index.md"
 
@@ -145,11 +154,4 @@
   after  = "table-of-contents"
 
   selector = "div#toc"
-  only_if_empty = true
-
-[widgets.clean-up-footnotes]
-  widget = "delete_element"
-  after = "footnotes"
-
-  selector = "div#footnotes"
   only_if_empty = true
