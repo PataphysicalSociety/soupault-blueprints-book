@@ -20,7 +20,7 @@ of the soupault reference manual.
 
 ## Adding chapters
 
-Chapters are numbered automatically in the sidebar.
+The sidebar with a list of chapters is generated completely automatically.
 There's no need to write a ToC/summary of the book by hand.
 
 Chapter numbers are taken from file names. In the sample setup,
